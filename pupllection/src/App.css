@@ -25,7 +25,7 @@
 }
 
 body {
-  font-family: "Gorditas", "Darumadrop One", system-ui, sans-serif;
+  font-family: "Darumadrop One", system-ui, sans-serif;
   background-color: var(--cream);
   color: var(--chocolate);
   line-height: 1.6;
@@ -1724,4 +1724,60 @@ a.family-pill:hover {
   .about-page h1 {
     font-size: 30px;
   }
+}
+
+/* Additional features: recently viewed + chart controls */
+.side-recent ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.side-recent a {
+  display: block;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--chocolate);
+}
+
+.side-recent a:hover {
+  background: var(--paper);
+  color: var(--caramel-dark);
+}
+
+.side-recent a:focus-visible,
+.link-button:focus-visible,
+.charts-toggle:focus-visible {
+  outline: 3px solid rgba(201, 139, 75, 0.6);
+  outline-offset: 2px;
+}
+
+.side-recent-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.link-button {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  background: none;
+  border: none;
+  color: var(--muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  color: var(--chocolate);
+}
+
+.charts-toggle {
+  flex-shrink: 0;
 }

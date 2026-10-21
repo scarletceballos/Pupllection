@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   Link,
   NavLink,
@@ -16,6 +16,8 @@ import { API_BASE, buildBreedEntries, computeInsights } from "./breedData.js";
 import { useBreedFilters } from "./useBreedFilters.js";
 
 const FAVORITES_KEY = "pupllection-favorites";
+const RECENT_KEY = "pupllection-recent";
+const RECENT_LIMIT = 5;
 const FLOATERS = ["", "🐾", "🦴", "", "🐾", "🎾", "", "🦴", "🐾", ""];
 const TYPE_OPTIONS = [
   { value: "all", label: "All" },
@@ -23,9 +25,9 @@ const TYPE_OPTIONS = [
   { value: "sub", label: "Sub-breeds" },
 ];
 
-function loadFavorites() {
+function loadList(key) {
   try {
-    const saved = JSON.parse(localStorage.getItem(FAVORITES_KEY));
+    const saved = JSON.parse(localStorage.getItem(key));
     return Array.isArray(saved) ? saved : [];
   } catch {
     return [];
@@ -47,7 +49,7 @@ function ScrollToTop() {
   return null;
 }
 
-function Sidebar({ insights, favoritesCount }) {
+function Sidebar({ insights, favoritesCount, recentBreeds, onClearRecent }) {
   const onBreedPage = useMatch("/breed/:breedId") !== null;
   const leaders = insights ? insights.largestFamilies : [];
   const leader = leaders[0];
@@ -98,6 +100,24 @@ function Sidebar({ insights, favoritesCount }) {
           <span className="stat-note">Stored in this browser</span>
         </div>
       </div>
+
+      {recentBreeds.length > 0 && (
+        <div className="side-recent">
+          <div className="side-recent-head">
+            <h2 className="side-heading">Recently viewed</h2>
+            <button type="button" className="link-button" onClick={onClearRecent}>
+              Clear
+            </button>
+          </div>
+          <ul>
+            {recentBreeds.map((breed) => (
+              <li key={breed.id}>
+                <Link to={`/breed/${breed.id}`}>{breed.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </aside>
   );
 }
@@ -271,7 +291,12 @@ function Dashboard({ filters, favorites, onToggleFavorite, loading, error, onRet
         <span>🐾</span>
       </div>
 
-      <InsightsSection insights={insights} loading={loading} onApplyPreset={handlePreset} />
+      <InsightsSection
+        insights={insights}
+        loading={loading}
+        onApplyPreset={handlePreset}
+        onPickFamily={(family) => handlePreset({ family })}
+      />
 
       <section className="directory-section" id="breed-gallery">
         <div className="section-heading">
@@ -440,10 +465,13 @@ function Dashboard({ filters, favorites, onToggleFavorite, loading, error, onRet
 
 function App() {
   const [breeds, setBreeds] = useState([]);
-  const [favorites, setFavorites] = useState(loadFavorites);
+  const [favorites, setFavorites] = useState(() => loadList(FAVORITES_KEY));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  const [recentIds, setRecentIds] = useState(() => loadList(RECENT_KEY));
+  const breedMatch = useMatch("/breed/:breedId");
+  const viewedId = breedMatch ? breedMatch.params.breedId : null;
 
   useEffect(() => {
     let ignore = false;
@@ -491,6 +519,36 @@ function App() {
     }
   }, [favorites]);
 
+  const lastProcessedRef = useRef(null);
+
+  // Remember breeds the person has opened (only ids that really exist).
+  useEffect(() => {
+    if (!viewedId) return;
+
+    if (viewedId !== lastProcessedRef.current && breeds.some((breed) => breed.id === viewedId)) {
+      lastProcessedRef.current = viewedId;
+    
+    setRecentIds((current) =>
+      current[0] === viewedId
+        ? current
+        : [viewedId, ...current.filter((id) => id !== viewedId)].slice(0, RECENT_LIMIT)
+      );
+    }
+  }, [viewedId, breeds]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(RECENT_KEY, JSON.stringify(recentIds));
+    } catch {
+      // Storage can be unavailable; the list just won't persist.
+    }
+  }, [recentIds]);
+
+  const recentBreeds = useMemo(
+    () => recentIds.map((id) => breeds.find((breed) => breed.id === id)).filter(Boolean),
+    [recentIds, breeds]
+  );
+
   const insights = useMemo(() => computeInsights(breeds), [breeds]);
   const filters = useBreedFilters(breeds, favorites);
 
@@ -526,7 +584,12 @@ function App() {
       </header>
 
       <div className="app-body">
-        <Sidebar insights={insights} favoritesCount={favorites.length} />
+        <Sidebar
+          insights={insights}
+          favoritesCount={favorites.length}
+          recentBreeds={recentBreeds}
+          onClearRecent={() => setRecentIds([])}
+        />
 
         <Routes>
           <Route

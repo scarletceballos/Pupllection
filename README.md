@@ -4,63 +4,59 @@ Submitted by: **Scarlet Ceballos**
 
 This web app: **Pupllection is a dashboard focusing on every dog breed and sub-breed from the Dog CEO API. Users can search and filter the collection, view a random photo of each breed, save favorites, and get surprised with a random breed.**
 
-Time spent: **12** hours spent in total
+Time spent: **11** hours spent in total
 
-## Required Features
 
 The following **required** functionality is completed:
 
-- [x] **The site has a dashboard displaying a list of data fetched using an API call**
-  - The dashboard displays more than 10 unique items, one per row (165 breed and sub-breed entries, shown 12 at a time with a "Show more breeds" button)
-  - The dashboard includes at least two features in each row: a random photo, the breed name, its family, its type (standalone breed or sub-breed), and how many varieties are in its family
-- [x] **`useEffect` React hook and `async`/`await` are used**
-  - `useEffect` + `async`/`await` fetch the breed list (`/breeds/list/all`) in `App`, and each row fetches its own random photo (`/breed/.../images/random`) the same way
-- [x] **The app dashboard includes at least three summary statistics about the data**
-  - The app dashboard includes four summary statistics about the data:
-    - **Breed families**: the number of top-level breeds (108)
-    - **Sub-breeds**: the number of varieties inside a breed (99)
-    - **Largest family**: the family with the most varieties (Terrier, 25)
-    - **Showing now**: how many entries match the current search and filters
-- [x] **A search bar allows the user to search for an item in the fetched data**
-  - The search bar filters by breed name and only displays matching rows
-  - The list updates as the user types
-- [x] **An additional filter allows the user to restrict displayed items by specified categories**
-  - The **Family** dropdown filters by breed family (a different attribute than the name search)
-  - Only rows in the chosen family are shown, and the list updates as the dropdown changes
+- [x] **Clicking on an item in the list view displays more details about it**
+  - Clicking on an item in the dashboard list navigates to a detail view for that item
+  - Detail view includes extra information about the item not included in the dashboard view
+  - The same sidebar is displayed in detail view as in dashboard view
+  - *To ensure an accurate grade, your sidebar **must** be viewable when showing the details view in your recording.*
+- [x] **Each detail view of an item has a direct, unique URL link to that item’s detail view page**
+  -  *To ensure an accurate grade, the URL/address bar of your web browser **must** be viewable in your recording.*
+- [x] **The app includes at least two unique charts developed using the fetched data that tell an interesting story**
+  - At least two charts should be incorporated into the dashboard view of the site
+  - Each chart should describe a different aspect of the dataset
+
 
 The following **optional** features are implemented:
 
-- [x] Multiple filters can be applied simultaneously
-  - Search, family, type, family-size bounds, and favorites-only all combine together
-- [x] Filters use different input types
-  - Text input (search), dropdowns (family and sort), radio buttons (type), number inputs (bounds), and a checkbox (favorites only)
-- [x] The user can enter specific bounds for filter values
-  - "Varieties in family" accepts a minimum and a maximum, so the user can ask for, say, families with between 5 and 10 varieties
+- [x] The site’s customized dashboard contains more content that explains what is interesting about the data
+  - A "story in the data" section with an average-line annotation on the bar chart, a "What to notice" caption under each chart, and three insight cards
+  - "Try these filters in the gallery" buttons that apply real filters (sub-breeds only, the largest family, big families, standalone breeds)
+  - A separate About the data page explaining how the data is organized, how to read the charts, and what to be careful about
+  - All numbers and wording are computed from the fetched data, not hard-coded
+- [x] The site allows users to toggle between different data visualizations
+  - Hide charts / Show charts button displays or hides the visualizations
+  - Each chart also has its own toggle: Bars ↔ Pie for the first chart, and Split (donut) ↔ Sizes (bar chart) for the second
+
 
 The following **additional** features are implemented:
 
-* [x] Each row has a Save button that hearts a breed. Favorites are stored in `localStorage`, survive a page refresh, and can be shown on their own with the "Favorites only" checkbox (which also shows the saved count).
-* [x]  A button picks a random breed from the loaded data, clears every other filter, and shows that breed so the user can discover one they wouldn't have searched for.
-* [x] Fetches another random photo for just that breed.
-* [x] Sorting A to Z or Z to A, plus a Reset button that clears every filter at once.
-* [x] Friendly loading, error, and empty states, including a "Try Again" button if the API can't be reached.
+* [x] **Click a chart to filter the list.** Clicking a bar in the "Where the sub-breeds live" chart filters the gallery to that breed family and scrolls down to it, which connects the story told by the charts to the breeds themselves.
+* [x] **Recently viewed breeds in the sidebar.** The last 5 breeds you opened are listed in the sidebar on every page (most recent first, no duplicates), saved in the browser so they survive a refresh, with a Clear button.
+* [x] Filters and search are kept when you open a breed and come back, instead of resetting.
+* [x] A "Copy link" box on each detail page, plus family-member links and previous/next navigation between breeds.
+* [x] Favorites carry over to the detail page, and the sidebar shows how many pups are saved.
 
 ## Video Walkthrough
 
 Here's a walkthrough of implemented user stories:
 
-<img src='pupllection/assets/dogpreview.gif' title='Video Walkthrough' width='850' alt='Video Walkthrough' />
+<img src='pupllection/assets/dogpreviewpart2.gif' title='Video Walkthrough' width='850' alt='Video Walkthrough' />
 
 GIF created with [N-Studio](https://nicke.tech/n-studio) for Windows
 
 ## Notes
 
 Challenges that came up while building the app:
+- Loading a photo for every breed meant 165 separate requests at once, so I showed 12 breeds at a time with a “Show more” button and lazy-loaded the images.
+- Some API responses came back after I had already changed pages or filters, which could show the wrong data. I fixed this by adding a cleanup check in each effect so old responses get ignored.
+- The breed list is nested (breeds with sub-breeds inside), but the photo URLs are built differently. I flattened everything into one list where each entry carries its own API path.
+- localStorage can be blocked or hold bad data, so I wrapped reading and writing in try/catch and fell back to an empty favorites list instead of letting the app crash.
 
-- Every breed row needs its own photo request, so loading all 165 at once would fire 165 network calls. I show 12 rows at a time with a "Show more breeds" button and use `loading="lazy"` on images.
-- Both the breed fetch and each row's photo fetch can finish after the component has changed or unmounted. Each effect uses an `ignore` flag in its cleanup so a late response can't overwrite newer state or trigger a state update on a removed component.
-- The breed list is nested (`hound: ["afghan", "basset", ...]`) while photo URLs are `/breed/hound/afghan/images/random`, and standalone breeds have no sub-breed segment. I flatten the nested data into one list of entries, each carrying its own API path, family, type, and family size.
-- `localStorage` can be blocked or hold invalid data, so reading and writing are wrapped in `try`/`catch` and fall back to an empty list.
 
 ## License
 

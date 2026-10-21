@@ -56,12 +56,14 @@ function ChartCard({ title, subtitle, toggle, caption, children }) {
   );
 }
 
-function FamilyChart({ insights }) {
+function FamilyChart({ insights, onPickFamily }) {
   const [view, setView] = useState("bar");
   const { withSubs, averageSubs, subBreedCount, maxSubs, largestFamilies, topThree, topThreeShare } =
     insights;
 
-  const barData = withSubs.slice(0, TOP_BARS).map((f) => ({ name: f.label, subBreeds: f.subCount }));
+  const barData = withSubs
+    .slice(0, TOP_BARS)
+    .map((f) => ({ name: f.label, family: f.family, subBreeds: f.subCount }));
 
   const pieData = withSubs.slice(0, TOP_SLICES).map((f) => ({ name: f.label, value: f.subCount }));
   const otherFamilies = withSubs.slice(TOP_SLICES);
@@ -80,7 +82,7 @@ function FamilyChart({ insights }) {
 
   const caption =
     view === "bar"
-      ? `${leadText}. The dashed line marks the average of ${averageSubs.toFixed(1)} sub-breeds per family that has any.`
+      ? `${leadText}. The dashed line marks the average of ${averageSubs.toFixed(1)} sub-breeds per family that has any. Click a bar to filter the gallery to that family.`
       : `${joinList(topThree.map((f) => f.label))} together hold ${topThreeShare}% of all ${subBreedCount} sub-breeds.`;
 
   return (
@@ -119,7 +121,16 @@ function FamilyChart({ insights }) {
               strokeDasharray="5 4"
               label={{ value: `Avg ${averageSubs.toFixed(1)}`, position: "top", fill: "#a86d33", fontSize: 12 }}
             />
-            <Bar dataKey="subBreeds" name="Sub-breeds" radius={[0, 8, 8, 0]}>
+            <Bar
+              dataKey="subBreeds"
+              name="Sub-breeds"
+              radius={[0, 8, 8, 0]}
+              cursor="pointer"
+              onClick={(entry) => {
+                const family = entry?.family ?? entry?.payload?.family;
+                if (family && onPickFamily) onPickFamily(family);
+              }}
+            >
               {barData.map((entry, index) => (
                 <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
               ))}
@@ -256,7 +267,9 @@ function buildPresets(insights) {
   return presets;
 }
 
-export function InsightsSection({ insights, loading, onApplyPreset }) {
+export function InsightsSection({ insights, loading, onApplyPreset, onPickFamily }) {
+  const [chartsVisible, setChartsVisible] = useState(true);
+
   if (!insights) {
     return loading ? (
       <section className="insights-section" id="insights" aria-live="polite">
@@ -284,12 +297,24 @@ export function InsightsSection({ insights, loading, onApplyPreset }) {
             uneven that is. Use the toggles to look at the same data a different way.
           </p>
         </div>
+
+        <button
+          type="button"
+          className="ghost-button charts-toggle"
+          aria-expanded={chartsVisible}
+          aria-controls="chart-grid"
+          onClick={() => setChartsVisible((visible) => !visible)}
+        >
+          {chartsVisible ? "Hide charts" : "Show charts"}
+        </button>
       </div>
 
-      <div className="chart-grid">
-        <FamilyChart insights={insights} />
-        <MakeupChart insights={insights} />
-      </div>
+      {chartsVisible && (
+        <div className="chart-grid" id="chart-grid">
+          <FamilyChart insights={insights} onPickFamily={onPickFamily} />
+          <MakeupChart insights={insights} />
+        </div>
+      )}
 
       <div className="insight-grid">
         <article className="insight-card">
